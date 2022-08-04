@@ -30,7 +30,9 @@ on-disk key-value database format. The current format is based heavily on
 D. J. Bernstein's CDB format (http://cr.yp.to/cdb.html).
 """
 
-import os, struct
+import os
+import struct
+import sys
 from binascii import crc32
 from hashlib import md5  # @UnresolvedImport
 
@@ -56,7 +58,10 @@ def cdb_hash(key):
 
 
 def md5_hash(key):
-    return int(md5(key).hexdigest(), 16) & 0xffffffff
+    print("Using python version", sys.version_info[0], sys.version_info[1])
+    if sys.version_info[0] < 3 or sys.version_info[1] < 9:
+        return int(md5(key).hexdigest(), 16) & 0xffffffff
+    return int(md5(key, usedforsecurity=False).hexdigest(), 16) & 0xffffffff
 
 
 def crc_hash(key):
@@ -729,6 +734,3 @@ class FieldedOrderedHashReader(HashReader):
         for item in self.term_ranges_from(fieldname, btext):
             keypos, keylen, datapos, datalen = item
             yield (dbfile.get(keypos, keylen), dbfile.get(datapos, datalen))
-
-
-
